@@ -1,0 +1,9 @@
+[Unit]
+Description=LAURA: catch event of started DE
+Requires=auditd.service
+After=auditd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=laura-load-audit

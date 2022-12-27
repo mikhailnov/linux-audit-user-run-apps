@@ -1,0 +1,10 @@
+[Unit]
+Description=LAURA: catch event of started DE
+
+[Path]
+PathExistsGlob=/var/tmp/laura-uid-*
+#TriggerLimitIntervalSec=1h
+#TriggerLimitBurst=4
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+#!/bin/bash
+# LAURA — Linux audit user run apps
+# This script loads auditd(8) rules
+
+set -eu
+set +f
+set -o pipefail
+
+for i in /var/tmp/laura-uid-*
+do
+    if [ "$i" = '/var/tmp/laura-uid-*' ]; then
+        echo "No needed files found!"
+        continue
+    fi
+    # Do not source (.) this file!
+    # It will allow non-root to execute code as root!
+    USERID="$(set -e -o pipefail; grep ^USERID= "$i" | cut -d= -f2)"
+    PARENTPID="$(set -e -o pipefail; grep ^PARENTPID= "$i" | cut -d= -f2)"
+    if ! [[ "$USERID" =~ ^[0-9]+$ ]]; then
+        echo "USERID is invalid"
+        continue
+    fi
+    if [ "$(stat --printf="%u" "$i")" != "$USERID" ]; then
+        echo "File was created not by declared user"
+        continue
+    fi
+    if ! [[ "$PARENTPID" =~ ^[0-9]+$ ]]; then
+        echo "PARENTPID is invalid"
+        continue
+    fi
+    DE="$(grep ^DE= "$i" | cut -d= -f2)"
+    # check that $PARENTPID belongs to $USERID (if it still exists)
+    if [ -d /proc/"$PARENTPID" ] && [ "$USERID" != "$(cat /proc/"$PARENTPID"/loginuid)" ]; then
+        echo "PARENTPID does not belong to USERID"
+        continue
+    fi
+    case "$DE" in
+        KDE )
+            proctitle=plasmashell
+        ;;
+        * )
+            echo "DE is not supported yet"
+            continue
+        ;;
+    esac
+    read -r -a DEPID <<< "$(set -e -o pipefail; ps -u "$USERID" | grep "[[:blank:]]${proctitle}$")"
+    DEPID="${DEPID[0]}"
+    [ -n "$DEPID" ]
+    if ! [[ "$DEPID" =~ ^[0-9]+$ ]]; then
+        echo "DEPID is invalid"
+        continue
+    fi
+    # check that $DEPID belongs to $USERID
+    if [ "$USERID" != "$(cat /proc/$DEPID/loginuid)" ]; then
+        echo "DEPID does not belong to USERID"
+        continue
+    fi
+
+    # Now we have made all possible checks, load audit rules
+    bit="$(getconf LONG_BIT)"
+    [ -n "$bit" ]
+    auditctl -a exit,always -F arch=b"$bit" -F ppid="$DEPID" -S execve -k laura_process_start
+    auditctl -a exit,always -F arch=b"$bit" -F ppid="$DEPID" -S exit_group -k laura_process_end
+    auditctl -a exit,always -F arch=b"$bit" -F ppid="$DEPID" -S kill -k laura_process_end
+
+    # avoid processing the same file on next run
+    unlink "$i"
+done

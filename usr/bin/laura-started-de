@@ -1,0 +1,15 @@
+#!/bin/bash
+# LAURA — Linux audit user run apps
+# This script is started by DE in /etc/xdg/autostart
+
+set -efu
+set -o pipefail
+
+PARENTPID="$(ps -p $$ -o ppid:1=)"
+[ -n "$PARENTPID" ]
+
+cat > /var/tmp/laura-uid-"$UID" << EOF
+DE=$XDG_CURRENT_DESKTOP
+USERID=$UID
+PARENTPID=$PARENTPID
+EOF

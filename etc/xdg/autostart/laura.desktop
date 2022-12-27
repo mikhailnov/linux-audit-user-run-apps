@@ -1,0 +1,5 @@
+[Desktop Entry]
+Version=1.0
+Name=LAURA
+Comment=Linux Audit User Run Applications
+Exec=laura-started-de
