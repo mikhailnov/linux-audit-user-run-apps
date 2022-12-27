@@ -19,3 +19,21 @@
 Демон auditd может быть настроен так, чтобы не писать файлы `/var/log/audit/audit.log`, демон journald умеет "кушать" события аудита.
 
 Сопоставлять события запуска (laura_process_start) и остановки (laura_process_end) программы можно сопоставить по PID — уникальному идентификатору процессу, посчитав время ее работы как разницу между временными метками остановки и запуска.
+
+# Установка
+
+Установка из исходников:
+
+`sudo make install`
+
+Установка из репозитория ROSA Linux:
+
+`sudo dnf install linux-audit-user-run-apps` (или: `sudo dnf install laura`)
+
+Установка из репозитория ALT Linux:
+
+`sudo apt-get install linux-audit-user-run-apps` (или: `sudo apt-get install laura`)
+
+После установки выполнить:
+
+`sudo systemctl enable --now laura.path`
