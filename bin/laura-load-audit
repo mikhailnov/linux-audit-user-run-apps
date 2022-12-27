@@ -10,7 +10,7 @@ for i in /var/tmp/laura-uid-*
 do
     if [ "$i" = '/var/tmp/laura-uid-*' ]; then
         echo "No needed files found!"
-        continue
+        exit 1
     fi
     # Do not source (.) this file!
     # It will allow non-root to execute code as root!
